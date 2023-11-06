@@ -9,7 +9,7 @@ COPY js/package.json \
      js/tsconfig.json \
      js/yarn.lock \
      /app/js/
-COPY js/makefiles /app/js/makefiles/
+
 COPY js/projects/chatbot-ui/package-lock.json \
      js/projects/chatbot-ui/package.json \
      js/projects/chatbot-ui/yarn.lock \
@@ -18,10 +18,10 @@ COPY js/projects/chatbot-ui/package-lock.json \
      /app/js/projects/chatbot-ui/
 
 RUN yarn install
-
 COPY js/projects/chatbot-ui ./
 
 RUN yarn build
 
 EXPOSE 3000
-ENTRYPOINT [ "/bin/bash", "--login", "-c"]
+ENTRYPOINT [ "/bin/bash", "--login", "-c", "npm start"]
+
