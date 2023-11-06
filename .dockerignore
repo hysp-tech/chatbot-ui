@@ -1,4 +1,6 @@
-.env
-.env.local
+env.dev
 node_modules
+.next
+__tests__
+.github
 test-results

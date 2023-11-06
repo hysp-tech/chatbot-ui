@@ -1,29 +1,27 @@
-# ---- Base Node ----
-FROM node:19-alpine AS base
-WORKDIR /app
-COPY package*.json ./
+ARG DOCKERHUB_REPO=docker.internal.hysp.org
+ARG NODEJS_VERSION=16.20
+FROM ${DOCKERHUB_REPO}/code-js-base:${NODEJS_VERSION}
 
-# ---- Dependencies ----
-FROM base AS dependencies
-RUN npm ci
+WORKDIR /app/js/projects/chatbot-ui
 
-# ---- Build ----
-FROM dependencies AS build
-COPY . .
-RUN npm run build
+# Install dependencies
+COPY js/package.json \
+     js/tsconfig.json \
+     js/yarn.lock \
+     /app/js/
+COPY js/makefiles /app/js/makefiles/
+COPY js/projects/chatbot-ui/package-lock.json \
+     js/projects/chatbot-ui/package.json \
+     js/projects/chatbot-ui/yarn.lock \
+     js/projects/chatbot-ui/next.config.js \
+     js/projects/chatbot-ui/next-i18next.config.js \
+     /app/js/projects/chatbot-ui/
 
-# ---- Production ----
-FROM node:19-alpine AS production
-WORKDIR /app
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/package*.json ./
-COPY --from=build /app/next.config.js ./next.config.js
-COPY --from=build /app/next-i18next.config.js ./next-i18next.config.js
+RUN yarn install
 
-# Expose the port the app will run on
+COPY js/projects/chatbot-ui ./
+
+RUN yarn build
+
 EXPOSE 3000
-
-# Start the application
-CMD ["npm", "start"]
+ENTRYPOINT [ "/bin/bash", "--login", "-c"]
