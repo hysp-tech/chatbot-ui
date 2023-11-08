@@ -1,27 +1,32 @@
+# ---- Build ----
 ARG DOCKERHUB_REPO=docker.internal.hysp.org
 ARG NODEJS_VERSION=16.20
-FROM ${DOCKERHUB_REPO}/code-js-base:${NODEJS_VERSION}
+FROM ${DOCKERHUB_REPO}/code-js-base:${NODEJS_VERSION} as build
 
-WORKDIR /app/js/projects/chatbot-ui
+WORKDIR /app
 
 # Install dependencies
-COPY js/package.json \
-     js/tsconfig.json \
-     js/yarn.lock \
-     /app/js/
-
-COPY js/projects/chatbot-ui/package-lock.json \
-     js/projects/chatbot-ui/package.json \
-     js/projects/chatbot-ui/yarn.lock \
-     js/projects/chatbot-ui/next.config.js \
-     js/projects/chatbot-ui/next-i18next.config.js \
-     /app/js/projects/chatbot-ui/
+COPY ./package.json ./
 
 RUN yarn install
-COPY js/projects/chatbot-ui ./
+COPY . .
 
 RUN yarn build
 
+# ---- Production ----
+ARG DOCKERHUB_REPO=docker.internal.hysp.org
+ARG NODEJS_VERSION=16.20
+FROM ${DOCKERHUB_REPO}/code-js-base:${NODEJS_VERSION} AS production
+WORKDIR /app
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/package*.json ./
+# i18 support
+COPY --from=build /app/next.config.js ./next.config.js
+COPY --from=build /app/next-i18next.config.js ./next-i18next.config.js
+
 EXPOSE 3000
-ENTRYPOINT [ "/bin/bash", "--login", "-c", "npm start"]
+ENTRYPOINT [ "/bin/bash", "--login", "-c", "yarn start"]
 

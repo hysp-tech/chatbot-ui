@@ -1,4 +1,4 @@
-env.dev
+env.*
 node_modules
 .next
 __tests__
