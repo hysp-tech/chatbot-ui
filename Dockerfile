@@ -5,8 +5,10 @@ FROM ${DOCKERHUB_REPO}/code-js-base:${NODEJS_VERSION} as build
 
 WORKDIR /app
 
-# Install dependencies
-COPY ./package.json ./
+# Install dependencies(add yarn.lock to have consisitent deps)
+COPY ./package.json \
+     ./yarn.lock \
+     ./
 
 RUN yarn install
 COPY . .
@@ -23,7 +25,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY --from=build /app/package*.json ./
-# i18 support
+# for i18 support
 COPY --from=build /app/next.config.js ./next.config.js
 COPY --from=build /app/next-i18next.config.js ./next-i18next.config.js
 
